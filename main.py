@@ -14,11 +14,13 @@ import torchvision
 import torchvision.transforms as transforms
 
 import os
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 import argparse
 
 from models import VGG, ResNet18, PreActResNet18, GoogLeNet, DenseNet121, ResNeXt29_2x64d, MobileNet, MobileNetV2, \
     DPN92, ShuffleNetG2, SENet18, ShuffleNetV2
 from optimizers.ErrorFeedbackSGD import ErrorFeedbackSGD
+from optimizers.CompSGD import CompSGD
 from utils.progress_bar import progress_bar
 from utils.pickle import save_obj, load_obj, make_directory, make_file_directory
 
@@ -126,7 +128,7 @@ def load_checkpoint(net, name):
     return start_epoch, best_acc
 
 
-def create_optimizer(net, comp, memory, noscale, lr=0.1, momentum=0.9, weight_decay=5e-4):
+def create_optimizer(net, comp, memory, noscale, lr=0.1, momentum=0.9, weight_decay=5e-4, k=0):
     """
     Creates the right optimizer regarding to the parameters and attach it to the net's parameters.
     :param net: The net to optimize.
@@ -140,14 +142,19 @@ def create_optimizer(net, comp, memory, noscale, lr=0.1, momentum=0.9, weight_de
     """
     if memory and not comp:
         raise ValueError('The memory option is activated without the compression operator')
-    if comp:
-        comp = 'scaled_sign'
-        if noscale:
-            comp = 'sign'
-        optimizer = ErrorFeedbackSGD(net.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay,
-                                     comp=comp, memory=memory)
+    if isinstance(comp, str):
+        if comp in ['svdk', 'topk']:
+            optimizer = CompSGD(net.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay,
+                                     comp=comp, k=k)
+        elif comp in ['scaled_sign', 'sign']:
+            optimizer = ErrorFeedbackSGD(net.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay,
+                                        comp=comp, memory=memory)
+        elif comp in ['sgd']:
+            optimizer = optim.SGD(net.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
+        else:
+            raise ValueError(f"No such comp: {comp}")
     else:
-        optimizer = optim.SGD(net.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
+        raise ValueError(f"No such comp: {comp}")
     return optimizer
 
 
@@ -193,8 +200,8 @@ def train(net, trainloader, device, optimizer, criterion, memory_back=False):
         loss.backward()
         optimizer.step()
         # TODO: check how it works
-        norm_ratio_val += optimizer.gradient_norms_ratio()
-        corrected_norm_ratio_val += optimizer.corrected_gradient_norms_ratio()
+        norm_ratio_val += 0
+        corrected_norm_ratio_val += 0
 
         train_loss += loss.item()
         _, predicted = outputs.max(1)
@@ -297,9 +304,10 @@ def write_results(args, res):
             file.write(str(arg) + ': ' + str(val) + '\\\n')
 
 
+
 def construct_and_train(name, dataset, model, resume, epochs,
                         lr, batch_size, momentum, weight_decay,
-                        comp, noscale, memory, mnorm, mback, norm_ratio, gpu):
+                        comp, k, noscale, memory, mnorm, mback, norm_ratio=False, gpu=0):
     """
     Constructs a network, trains it, and optionally saves the results.
     :param name: Model name (using for saving)
@@ -320,7 +328,7 @@ def construct_and_train(name, dataset, model, resume, epochs,
     """
     args = dict(name=name, dataset=dataset, model=model, resume=resume, epochs=epochs,
                 lr=lr, batch_size=batch_size, momentum=momentum, weight_decay=weight_decay,
-                comp=comp, noscale=noscale, memory=memory, mnorm=mnorm, mback=mback, norm_ratio=norm_ratio)
+                comp=comp, k=k, noscale=noscale, memory=memory, mnorm=mnorm, mback=mback, norm_ratio=norm_ratio)
     # set data loader
     trainloader, testloader, num_classes = load_data(dataset, batch_size)
     # set model and device
@@ -329,7 +337,7 @@ def construct_and_train(name, dataset, model, resume, epochs,
 
     # set optimizer and criterion
     # TODO: check API for creating optimizers
-    optimizer = create_optimizer(net, comp, memory, noscale, lr=lr, momentum=momentum, weight_decay=weight_decay)
+    optimizer = create_optimizer(net, comp, memory, noscale, k=k, lr=lr, momentum=momentum, weight_decay=weight_decay)
     criterion = nn.CrossEntropyLoss()
 
     # initialize the results
@@ -378,7 +386,7 @@ def construct_and_train(name, dataset, model, resume, epochs,
             res['train_accuracies'].append(train_acc)
             res['test_losses'].append(test_loss)
             res['test_accuracies'].append(test_acc)
-
+            
             # TODO: check consistency within optimizers
             if mback:
                 res['memory_back_train_losses'].append(mback_train_loss)
@@ -390,7 +398,7 @@ def construct_and_train(name, dataset, model, resume, epochs,
             if norm_ratio:
                 res['gradient_norm_ratios'].append(norm_ratio_val)
                 res['corrected_norm_ratios'].append(corrected_norm_ratio_val)
-            
+
             # save best result
             if test_acc > best_acc:
                 print('Saving new best..')
@@ -425,7 +433,10 @@ if __name__ == '__main__':
     parser.add_argument('--weight_decay', default=5e-4, type=float, help='SGD weight decay')
 
     # for signSGD with error feedback
-    parser.add_argument('--comp', action='store_true', help='apply the scaled sign compression operator')
+    # parser.add_argument('--comp', action='store_true', help='apply the scaled sign compression operator')
+    parser.add_argument('--comp', default=None, type=str, help='different gradient compression schemes')
+    parser.add_argument('--k', default=3, type=int, help='value k in top-k or k-svd')
+
     parser.add_argument('--noscale', action='store_true', help='apply only the sign compression operator')
     parser.add_argument('--memory', action='store_true', help='add a memory to the optimizer')
     parser.add_argument('--mnorm', action='store_true', help='computes the norm of the memory at each epoch')
@@ -434,4 +445,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
     construct_and_train(name=args.name, dataset=args.dataset, model=args.model, resume=args.resume, epochs=args.epochs,
                         lr=args.lr, batch_size=args.bs, momentum=args.momentum, weight_decay=args.weight_decay,
-                        comp=args.comp, noscale=args.noscale, memory=args.memory, mnorm=args.mnorm, mback=args.mback, gpu=args.gpu)
+                        comp=args.comp, k=args.k, noscale=args.noscale, memory=args.memory, mnorm=args.mnorm, mback=args.mback, gpu=args.gpu)

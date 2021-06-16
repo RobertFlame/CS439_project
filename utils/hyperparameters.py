@@ -16,25 +16,37 @@ def get_experiment_hyperparameters(model, dataset, optimizer):
     if dataset != 'cifar10' and dataset != 'cifar100':
         raise ValueError('Invalid value for dataset : {}'.format(dataset))
     momentum = 0
-    comp = True
+    comp = ''
     noscale = False
     memory = False
     mback = False
     mnorm = False
-    if optimizer == 'sgdm':
+    k = 0
+    if optimizer == 'sgd':
+        comp = 'sgd'
+    elif optimizer == 'sgdm':
         momentum = 0.9
-        comp = False
+        comp = 'sign'
     elif optimizer == 'ssgd':
         noscale = True
+        comp = 'sign'
     elif optimizer == 'sssgd':
-        pass
+        comp = 'scaled_sign'
     elif optimizer == 'ssgdf':
         memory = True
         mback = True
         mnorm = True
+        comp = 'scaled_sign'
     elif optimizer == 'signum':
         noscale = True
+        comp = 'sign'
         momentum = 0.9
+    elif optimizer == 'sgd_svdk':
+        comp = 'svdk'
+        k = 3
+    elif optimizer == 'sgd_topk':
+        comp = 'topk'
+        k = 10
     else:
         raise ValueError('Invalid value for optimizer : {}'.format(optimizer))
 
@@ -45,6 +57,7 @@ def get_experiment_hyperparameters(model, dataset, optimizer):
     hyperparameters['mback'] = mback
     hyperparameters['mnorm'] = mnorm
     hyperparameters['weight_decay'] = 5e-4
+    hyperparameters['k'] = k
 
     return hyperparameters
 
