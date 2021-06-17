@@ -29,7 +29,7 @@ def get_tuned_learning_rate(model, dataset, optimizer):
     return lr_space[np.nanargmin(losses)]
 
 
-def tune_learning_rate(model, dataset, optimizer, base_name=None):
+def tune_learning_rate(model, dataset, optimizer, base_name=None, gpu=0):
     """
     Tune the learning rate for a given experiment (batch size 128)
     The results are saved in base_folder + experiment_name if base_name is None,
@@ -56,15 +56,16 @@ def tune_learning_rate(model, dataset, optimizer, base_name=None):
     memory = hyperparameters['memory']
     mnorm = hyperparameters['mnorm']
     mback = hyperparameters['mback']
+    k = hyperparameters['k']
 
     losses = []
-    # lr_space = np.logspace(-5, 1, 9)
-    lr_space = np.logspace(-7, -1, 9)
+    lr_space = np.logspace(-5, 1, 9)
+    # lr_space = np.logspace(-7, -1, 9)
     for index, lr in enumerate(lr_space):
         name = base_name + 'lr' + str(index)
         res = construct_and_train(name=name, dataset=dataset, model=model, resume=False, epochs=num_epochs,
                                   lr=lr, batch_size=batch_size, momentum=momentum, weight_decay=weight_decay,
-                                  comp=comp, noscale=noscale, memory=memory, mnorm=mnorm, mback=mback)
+                                  comp=comp, k=k, noscale=noscale, memory=memory, mnorm=mnorm, mback=mback, gpu=gpu, norm_ratio=False)
         best_loss = np.nanmin(res['test_losses'])
         losses.append(best_loss)
     losses = np.array(losses)
@@ -94,10 +95,16 @@ if __name__ == '__main__':
     tune_learning_rate('vgg', 'cifar10', 'signum')
     tune_learning_rate('resnet', 'cifar100', 'signum')
     """
-
-    tune_learning_rate('vggnonorm', 'cifar10', 'sgdm')
-    tune_learning_rate('vggnonorm', 'cifar10', 'signum')
-    tune_learning_rate('vggnonorm', 'cifar10', 'sssgd')
-    tune_learning_rate('vggnonorm', 'cifar10', 'ssgdf')
+    idx = int(input("which one to test? (0-7): "))
+    gpu = int(input("Please input which gpu to use: "))
+    
+    tune_learning_rate('resnet', 'cifar10', 'sgd', gpu) if idx == 0 else None
+    tune_learning_rate('resnet', 'cifar10', 'sgdm', gpu) if idx == 1 else None
+    tune_learning_rate('resnet', 'cifar10', 'signum', gpu) if idx == 2 else None
+    tune_learning_rate('resnet', 'cifar10', 'sssgd', gpu) if idx == 3 else None
+    tune_learning_rate('resnet', 'cifar10', 'ssgdf', gpu)if idx == 4 else None
+    tune_learning_rate('resnet', 'cifar10', 'sgd_svdk', gpu) if idx == 5 else None
+    tune_learning_rate('resnet', 'cifar10', 'sgd_topk', gpu) if idx == 6 else None
+    tune_learning_rate('resnet', 'cifar10', 'ssgd', gpu) if idx == 7 else None
 
     # Sign, noscale, no memory, momentum 0.9, weight decay
