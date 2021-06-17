@@ -10,7 +10,7 @@ from tune_lr import get_tuned_learning_rate
 base_folder = 'main_experiments/'
 
 
-def run_experiment(model, dataset, optimizer, prefix='', batch_size=128, num_exp=3, start_at=1, gpu=0):
+def run_experiment(model, dataset, optimizer, prefix='', batch_size=128, num_exp=3, start_at=1, gpu=0, lr_val=None):
     base_name = base_folder + 'batchsize-' + str(batch_size) + '/' \
                 + prefix + get_experiment_name(model, dataset, optimizer)
 
@@ -29,7 +29,7 @@ def run_experiment(model, dataset, optimizer, prefix='', batch_size=128, num_exp
     for exp_index in range(start_at, num_exp + start_at):
         resume = False
         name = base_name + str(exp_index) + '/'
-        lr = get_tuned_learning_rate(model, dataset, optimizer)*batch_size/128
+        lr = get_tuned_learning_rate(model, dataset, optimizer)*batch_size/128 if not lr_val else lr_val
         print('Tuned lr : {}'.format(lr))
         for epochs in num_epochs:
             construct_and_train(name=name, dataset=dataset, model=model, resume=resume, epochs=epochs,
@@ -70,11 +70,12 @@ if __name__ == '__main__':
     idx = int(input("which one to test? (0-7): "))
     gpu = int(input("Please input which gpu to use: "))
 
-    run_experiment('resnet', 'cifar10', 'sgd', batch_size=batch_size, num_exp=1, gpu=gpu) if idx == 0 else None
+    run_experiment('resnet', 'cifar10', 'sgd', batch_size=batch_size, num_exp=1, gpu=gpu, lr_val=0.05623413251903491) if idx == 0 else None
+    # run_experiment('resnet', 'cifar10', 'sgdm', batch_size=batch_size, num_exp=1, gpu=gpu, lr_val=0.0031622776601683794) if idx == 1 else None
     run_experiment('resnet', 'cifar10', 'sgdm', batch_size=batch_size, num_exp=1, gpu=gpu) if idx == 1 else None
-    run_experiment('resnet', 'cifar10', 'signum', batch_size=batch_size, num_exp=1, gpu=gpu) if idx == 2 else None
-    run_experiment('resnet', 'cifar10', 'sssgd', batch_size=batch_size, num_exp=1, gpu=gpu) if idx == 3 else None
-    run_experiment('resnet', 'cifar10', 'ssgd', batch_size=batch_size, num_exp=1, gpu=gpu) if idx == 4 else None
-    run_experiment('resnet', 'cifar10', 'ssgdf', batch_size=batch_size, num_exp=1, gpu=gpu) if idx == 5 else None
-    run_experiment('resnet', 'cifar10', 'sgd_svdk', batch_size=batch_size, num_exp=1, gpu=gpu) if idx == 6 else None
-    run_experiment('resnet', 'cifar10', 'sgd_topk', batch_size=batch_size, num_exp=1, gpu=gpu) if idx == 7 else None
+    run_experiment('resnet', 'cifar10', 'signum', batch_size=batch_size, num_exp=1, gpu=gpu, lr_val=0.0001) if idx == 2 else None
+    run_experiment('resnet', 'cifar10', 'sssgd', batch_size=batch_size, num_exp=1, gpu=gpu, lr_val=0.05623413251903491) if idx == 3 else None
+    run_experiment('resnet', 'cifar10', 'ssgd', batch_size=batch_size, num_exp=1, gpu=gpu, lr_val=0.00005623413251903491) if idx == 4 else None
+    run_experiment('resnet', 'cifar10', 'ssgdf', batch_size=batch_size, num_exp=1, gpu=gpu, lr_val=0.05623413251903491) if idx == 5 else None
+    run_experiment('resnet', 'cifar10', 'sgd_svdk', batch_size=batch_size, num_exp=1, gpu=gpu, lr_val=0.01) if idx == 6 else None
+    run_experiment('resnet', 'cifar10', 'sgd_topk', batch_size=batch_size, num_exp=1, gpu=gpu, lr_val=0.05623413251903491) if idx == 7 else None
