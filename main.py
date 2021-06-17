@@ -186,13 +186,13 @@ def train(net, trainloader, device, optimizer, criterion, memory_back=False):
         inputs, targets = inputs.to(device), targets.to(device)
 
         # TODO: check what it is
-        if memory_back:
-            with TemporarilyAddMemory(optimizer):
-                outputs = net(inputs)
-                loss = criterion(outputs, targets)
-                mback_train_loss += loss.item()
-                _, predicted = outputs.max(1)
-                mback_correct += predicted.eq(targets).sum().item()
+        # if memory_back:
+        #     with TemporarilyAddMemory(optimizer):
+        #         outputs = net(inputs)
+        #         loss = criterion(outputs, targets)
+        #         mback_train_loss += loss.item()
+        #         _, predicted = outputs.max(1)
+        #         mback_correct += predicted.eq(targets).sum().item()
 
         optimizer.zero_grad()
         outputs = net(inputs)
@@ -244,13 +244,13 @@ def test(net, testloader, device, optimizer, criterion, memory_back=False):
             inputs, targets = inputs.to(device), targets.to(device)
 
             # TODO: check what it is
-            if memory_back:
-                with TemporarilyAddMemory(optimizer):
-                    outputs = net(inputs)
-                    loss = criterion(outputs, targets)
-                    mback_test_loss += loss.item()
-                    _, predicted = outputs.max(1)
-                    mback_correct += predicted.eq(targets).sum().item()
+            # if memory_back:
+            #     with TemporarilyAddMemory(optimizer):
+            #         outputs = net(inputs)
+            #         loss = criterion(outputs, targets)
+            #         mback_test_loss += loss.item()
+            #         _, predicted = outputs.max(1)
+            #         mback_correct += predicted.eq(targets).sum().item()
 
             outputs = net(inputs)
             loss = criterion(outputs, targets)

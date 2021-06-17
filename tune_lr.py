@@ -98,13 +98,13 @@ if __name__ == '__main__':
     idx = int(input("which one to test? (0-7): "))
     gpu = int(input("Please input which gpu to use: "))
     
-    tune_learning_rate('resnet', 'cifar10', 'sgd', gpu) if idx == 0 else None
-    tune_learning_rate('resnet', 'cifar10', 'sgdm', gpu) if idx == 1 else None
-    tune_learning_rate('resnet', 'cifar10', 'signum', gpu) if idx == 2 else None
-    tune_learning_rate('resnet', 'cifar10', 'sssgd', gpu) if idx == 3 else None
-    tune_learning_rate('resnet', 'cifar10', 'ssgdf', gpu)if idx == 4 else None
-    tune_learning_rate('resnet', 'cifar10', 'sgd_svdk', gpu) if idx == 5 else None
-    tune_learning_rate('resnet', 'cifar10', 'sgd_topk', gpu) if idx == 6 else None
-    tune_learning_rate('resnet', 'cifar10', 'ssgd', gpu) if idx == 7 else None
+    tune_learning_rate('resnet', 'cifar10', 'sgd', gpu=gpu) if idx == 0 else None
+    tune_learning_rate('resnet', 'cifar10', 'sgdm', gpu=gpu) if idx == 1 else None
+    tune_learning_rate('resnet', 'cifar10', 'signum', gpu=gpu) if idx == 2 else None
+    tune_learning_rate('resnet', 'cifar10', 'sssgd', gpu=gpu) if idx == 3 else None
+    tune_learning_rate('resnet', 'cifar10', 'ssgdf', gpu=gpu)if idx == 4 else None
+    tune_learning_rate('resnet', 'cifar10', 'sgd_svdk', gpu=gpu) if idx == 5 else None
+    tune_learning_rate('resnet', 'cifar10', 'sgd_topk', gpu=gpu) if idx == 6 else None
+    tune_learning_rate('resnet', 'cifar10', 'ssgd', gpu=gpu) if idx == 7 else None
 
     # Sign, noscale, no memory, momentum 0.9, weight decay
