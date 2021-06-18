@@ -4,7 +4,7 @@
 
 Code for the experimental parts of the course project in CS-439: Optimization for Machine Learning.
 
-The implementation is based on [this repository](https://github.com/kuangliu/pytorch-cifar)'s code and uses PyTorch.
+The implementation is based on [this repository](https://github.com/epfml/error-feedback-SGD)'s code and uses PyTorch.
 
 ## Requirements
 
@@ -28,21 +28,23 @@ To install them automatically: `pip install -r requirements.txt`
 
 ## Notations
 
-A few notations in the code don't match the notations from the paper. In particular,
+We clarify the noations here. In particular,
 
 - **ssgd**: SGD with sign gradient compression.
 - **sgd_topk**: SGD with top-*k* gradient compression. 
-- **sgd_svdk**: SGD with *k*-PCA gradient compression.
+- **sgd_pcak**: SGD with *k*-PCA gradient compression.
 - **sssgd**: SGD with *scaled* sign gradient compression.
 - **ussgd**: Unscaled SignSGD (MEM-SGD), i.e., SGD with sign gradient compression and error feedback.
 - **ssgdf**: Error-feedback SignSGD, i.e., SGD with *scaled* sign gradient compression and error feedback.
+- **onebit_adam_unscaled**: the original version of one-bit Adam.
+- **onebit_adam_scaled**: the scaled version of one-bit Adam.
 
 ## Usage
 
 - `main.py` can be called from the command line to run a single network training and testing. It can take a variety of optional arguments. Type `python main.py --help` for further details.
 - `utils.hyperparameters.py` facilitate the definition of all the hyper-parameters of the experiments.
 - `tune_lr.py` allows to tune the learning rate for a network architecture/data set/optimizer configuration.
-- `main_experiments.py` contains the experiments presented in the paper, section 6. TODO:
+- `main_experiments.py` contains the experiments in the report. 
 - `plot_graph.py` constains the code for plotting the results
 - `print_stats.py` constains the code to list the best performance of each experiment done by tunr_lr.py
 
