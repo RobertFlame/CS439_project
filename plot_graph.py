@@ -48,7 +48,8 @@ def plot_lr_curve(lr_curve_group, fig_name, align_axis=True, yrange=None):
             ax.set_ylabel(y_label, fontsize=14)
         ax.legend(loc=legend_loc, prop={'size': 14})
 
-    plt.savefig(fig_name, dpi=600)
+    plt.show()
+    plt.savefig("figs/"+fig_name, dpi=600)
 
 
 def load_obj(name):
