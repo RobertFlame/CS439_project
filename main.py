@@ -148,12 +148,15 @@ def create_optimizer(net, comp, memory, noscale, lr=0.1, momentum=0.9, weight_de
         if memory and not comp:
             raise ValueError('The memory option is activated without the compression operator')
         if comp in ['svdk', 'topk']:
+            print("CompSGD")
             optimizer = CompSGD(net.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay,
                                     comp=comp, k=k)
         elif comp in ['scaled_sign', 'sign']:
+            print("EF-signSGD")
             optimizer = ErrorFeedbackSGD(net.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay,
                                         comp=comp, memory=memory)
         elif comp in ['sgd']:
+            print("SGD")
             optimizer = optim.SGD(net.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
         else:
             raise ValueError(f"No such comp: {comp}")
