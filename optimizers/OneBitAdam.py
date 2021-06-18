@@ -23,6 +23,7 @@ def unscaled_sign(x):
 
 
 class OneBitAdam(Optimizer):
+    
     def __init__(self, params, lr=required, betas=(0.9, 0.999), eps=1e-8, 
                  weight_decay=0, comp='scaled_sign', memory=False, amsgrad=False, start_freeze=20):
         if lr is not required and lr < 0.0:
@@ -92,7 +93,7 @@ class OneBitAdam(Optimizer):
                     param_state['exp_avg'].mul_(group['betas'][0]).add_(d_p, alpha=1 - group['betas'][0])
                     param_state['exp_asq'].mul_(group['betas'][1]).addcmul_(d_p, d_p, value=1 - group['betas'][1])
 
-#                     bias_correction1 = 1 - group['betas'][0] ** param_state['step']
+#                     bias_correction1 = 1 - group['betas'][0] ** param_state['step']  # choose not to use bias correction
 #                     bias_correction2 = 1 - group['betas'][1] ** param_state['step']
                     bias_correction1 = 1.0
                     bias_correction2 = 1.0
@@ -123,12 +124,13 @@ class OneBitAdam(Optimizer):
                     param_state['exp_avg'].mul_(group['betas'][0]).add_(d_p, alpha=1 - group['betas'][0])
 #                     param_state['exp_asq'].mul_(group['betas'][1]).addcmul_(d_p, d_p, value=1 - group['betas'][1])  # freeze
 
-                    bias_correction1 = 1 - group['betas'][0] ** param_state['step']
-                    bias_correction2 = 1 - group['betas'][1] ** param_state['step']
+#                     bias_correction1 = 1 - group['betas'][0] ** param_state['step']
+#                     bias_correction2 = 1 - group['betas'][1] ** param_state['step']
+                    bias_correction1 = 1.0
+                    bias_correction2 = 1.0
                     denom = (param_state['exp_asq'].sqrt() / math.sqrt(bias_correction2)).add_(eps)
                     d_p = param_state['exp_avg'] / bias_correction1
 
-                    # d_p corresponds to g in alg. 1 from the paper.
                     param_state['gradient'] = d_p  # Save the gradient so its norm can be computed later
 
                     d_p = group['lr'] * d_p
