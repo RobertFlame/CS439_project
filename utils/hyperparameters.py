@@ -41,7 +41,7 @@ def get_experiment_hyperparameters(model, dataset, optimizer):
         mback = True
         mnorm = True
         comp = 'scaled_sign'
-    elif optimizer == 'sgdf':
+    elif optimizer == 'ussgdf':
         memory = True
         mback = True
         mnorm = True
@@ -50,7 +50,7 @@ def get_experiment_hyperparameters(model, dataset, optimizer):
         noscale = True
         comp = 'sign'
         momentum = 0.9
-    elif optimizer == 'sgd_svdk':
+    elif optimizer == 'sgd_pcak':
         comp = 'svdk'
         k = 3
     elif optimizer == 'sgd_topk':

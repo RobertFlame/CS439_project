@@ -106,9 +106,9 @@ if __name__ == '__main__':
     tune_learning_rate('resnet', 'cifar10', 'sgdm', gpu=gpu) if idx == 1 else None
     tune_learning_rate('resnet', 'cifar10', 'signum', gpu=gpu) if idx == 2 else None
     tune_learning_rate('resnet', 'cifar10', 'sssgd', gpu=gpu) if idx == 3 else None
-    tune_learning_rate('resnet', 'cifar10', 'sgdf', gpu=gpu) if idx == 4 else None
+    tune_learning_rate('resnet', 'cifar10', 'ussgdf', gpu=gpu) if idx == 4 else None
     tune_learning_rate('resnet', 'cifar10', 'ssgdf', gpu=gpu)if idx == 5 else None
-    tune_learning_rate('resnet', 'cifar10', 'sgd_svdk', gpu=gpu) if idx == 6 else None
+    tune_learning_rate('resnet', 'cifar10', 'sgd_pcak', gpu=gpu) if idx == 6 else None
     tune_learning_rate('resnet', 'cifar10', 'sgd_topk', gpu=gpu) if idx == 7 else None
     tune_learning_rate('resnet', 'cifar10', 'ssgd', gpu=gpu) if idx == 8 else None
     tune_learning_rate('resnet', 'cifar10', 'adam', gpu=gpu) if idx == 9 else None
