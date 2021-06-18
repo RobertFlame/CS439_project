@@ -113,8 +113,8 @@ def exp(group_logs, exps, fig_name, yrange=None, use_early_stop=False):
 
 
 if __name__ == "__main__":
-    exps_all = ["sgd", "ssgdf", "sssgd", "ssgd", "signum", "sgdm"]
-    exps =  ["sgd", "ssgdf", "sssgd", "ssgd", "signum"]
+    exps_all = ["sgd", "ssgdf", "sssgd", "ssgd", "signum", "ussgdf", "sgdm"]
+    exps =  ["sgd", "ssgdf", "sssgd", "ssgd", "ussgdf"]
     exps2 = ["ssgd", "sgd_pcak", "sgd_topk"]
 
     example_group_logs = {
@@ -125,15 +125,15 @@ if __name__ == "__main__":
         "memory norm":"memory_norms"
     }
 
-    # exp({"train accuracy":"train_accuracies"}, exps, "all_train_accuracy_wo_sgdm")
-    # exp({"train accuracy":"train_accuracies"}, exps, "zoom_all_train_accuracy_wo_sgdm", yrange=[94.0, 100.0])
-    # exp({"train loss":"train_losses"}, exps, "all_train_loss_wo_sgdm")
-    # exp({"test accuracy":"test_accuracies"}, exps, "all_test_accuracy_wo_sgdm")
-    # exp({"test accuracy":"test_accuracies"}, exps, "zoom_all_test_accuracy_wo_sgdm", yrange=[75.0, 95.0])
-    # exp({"test loss":"test_losses"}, exps, "all_test_loss_wo_sgdm")
+    exp({"train accuracy":"train_accuracies"}, exps, "all_train_accuracy_wo_sgdm")
+    exp({"train accuracy":"train_accuracies"}, exps, "zoom_all_train_accuracy_wo_sgdm", yrange=[94.0, 100.0])
+    exp({"train loss":"train_losses"}, exps, "all_train_loss_wo_sgdm")
+    exp({"test accuracy":"test_accuracies"}, exps, "all_test_accuracy_wo_sgdm")
+    exp({"test accuracy":"test_accuracies"}, exps, "zoom_all_test_accuracy_wo_sgdm", yrange=[75.0, 95.0])
+    exp({"test loss":"test_losses"}, exps, "all_test_loss_wo_sgdm")
     # exp({"memory norm":"memory_norms"}, ["ssgdf"], "ssgdf_memory_norm")
-    exp({
-        "train accuracy":"train_accuracies",
-        "test accuracy":"test_accuracies"
-    }, exps2, "compression_accuracy")
+    # exp({
+    #     "train accuracy":"train_accuracies",
+    #     "test accuracy":"test_accuracies"
+    # }, exps2, "compression_accuracy")
     # exp({"train accuracy":"train_accuracies"}, exps_all, "all_train_accuracy")
