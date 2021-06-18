@@ -147,7 +147,7 @@ def create_optimizer(net, comp, memory, noscale, lr=0.1, momentum=0.9, weight_de
     else:
         if memory and not comp:
             raise ValueError('The memory option is activated without the compression operator')
-        if comp in ['svdk', 'topk']:
+        if comp in ['pcak', 'topk']:
             print("CompSGD")
             optimizer = CompSGD(net.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay,
                                     comp=comp, k=k)
@@ -335,7 +335,7 @@ def construct_and_train(name, dataset, model, resume, epochs,
     :param exp_asq: Whether or not to save exp_asq
     :param adam_or_sgd: 'adam' or 'sgd'
     :param start_freeze: number of epochs before starting freezing exp_asq
-    :param k: used for topk or svdk
+    :param k: used for topk or pcak
     """
     args = dict(name=name, dataset=dataset, model=model, resume=resume, epochs=epochs,
                 lr=lr, batch_size=batch_size, momentum=momentum, weight_decay=weight_decay,
@@ -449,7 +449,7 @@ if __name__ == '__main__':
 
     # for signSGD with error feedback
     parser.add_argument('--comp', default=None, type=str, help='different gradient compression schemes')
-    parser.add_argument('--k', default=3, type=int, help='value k in top-k or k-svd')
+    parser.add_argument('--k', default=3, type=int, help='value k in top-k or k-pca')
 
     parser.add_argument('--noscale', action='store_true', help='apply only the sign compression operator')
     parser.add_argument('--memory', action='store_true', help='add a memory to the optimizer')
