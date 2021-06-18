@@ -204,8 +204,9 @@ def train(net, trainloader, device, optimizer, criterion, memory_back=False):
         loss.backward()
         optimizer.step()
 
-        norm_ratio_val += optimizer.gradient_norms_ratio()
-        corrected_norm_ratio_val += optimizer.corrected_gradient_norms_ratio()
+        if not isinstance(optimizer, optim.SGD):
+            norm_ratio_val += optimizer.gradient_norms_ratio()
+            corrected_norm_ratio_val += optimizer.corrected_gradient_norms_ratio()
 
         train_loss += loss.item()
         _, predicted = outputs.max(1)
