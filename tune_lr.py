@@ -64,7 +64,6 @@ def tune_learning_rate(model, dataset, optimizer, base_name=None, gpu=0):
     losses = []
     # lr_space = np.logspace(-5, 1, 9)
     # lr_space = np.logspace(-7, -1, 9)
-    lr_space = [1e-4, 1e-3, 1e-2]
     for index, lr in enumerate(lr_space):
         name = base_name + 'lr' + str(index)
         res = construct_and_train(name=name, dataset=dataset, model=model, resume=False, epochs=num_epochs,

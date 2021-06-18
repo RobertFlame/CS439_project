@@ -79,7 +79,7 @@ if __name__ == '__main__':
     run_experiment('resnet', 'cifar10', 'sgdm', batch_size=batch_size, num_exp=1, gpu=gpu) if idx == 1 else None
     run_experiment('resnet', 'cifar10', 'signum', batch_size=batch_size, num_exp=1, gpu=gpu, lr_val=0.0001) if idx == 2 else None
     run_experiment('resnet', 'cifar10', 'sssgd', batch_size=batch_size, num_exp=1, gpu=gpu, lr_val=0.05623413251903491) if idx == 3 else None
-    run_experiment('resnet', 'cifar10', 'sgdf', batch_size=batch_size, num_exp=1, gpu=gpu) if idx == 4 else None
+    run_experiment('resnet', 'cifar10', 'sgdf', batch_size=batch_size, num_exp=1, gpu=gpu, lr_val=2e-3) if idx == 4 else None
     run_experiment('resnet', 'cifar10', 'ssgd', batch_size=batch_size, num_exp=1, gpu=gpu, lr_val=0.00005623413251903491) if idx == 5 else None
     run_experiment('resnet', 'cifar10', 'ssgdf', batch_size=batch_size, num_exp=1, gpu=gpu, lr_val=0.05623413251903491) if idx == 6 else None
     run_experiment('resnet', 'cifar10', 'sgd_svdk', batch_size=batch_size, num_exp=1, gpu=gpu, lr_val=0.01) if idx == 7 else None
