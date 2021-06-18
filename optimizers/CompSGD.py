@@ -148,7 +148,7 @@ class CompSGD(Optimizer):
             comp = scaled_sign
         elif comp == 'sign':
             comp = unscaled_sign
-        elif comp == 'svdk':
+        elif comp == 'pcak':
             comp = svdCompress(k=k)
         elif comp == 'topk':
             comp = topkCompress(k=k)

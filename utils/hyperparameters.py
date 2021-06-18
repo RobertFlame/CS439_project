@@ -50,8 +50,8 @@ def get_experiment_hyperparameters(model, dataset, optimizer):
         noscale = True
         comp = 'sign'
         momentum = 0.9
-    elif optimizer == 'sgd_svdk':
-        comp = 'svdk'
+    elif optimizer == 'sgd_pcak':
+        comp = 'pcak'
         k = 3
     elif optimizer == 'sgd_topk':
         comp = 'topk'
