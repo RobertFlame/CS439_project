@@ -1,6 +1,4 @@
-# CS439_project
-
-# Gradient Compression over SGD and Adam: A Survey
+# CS439_project - Gradient Compression over SGD and Adam: A Survey
 
 Code for the experimental parts of the course project in CS-439: Optimization for Machine Learning.
 
