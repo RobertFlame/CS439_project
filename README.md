@@ -1,12 +1,10 @@
 # CS439_project
 
-# Error-feedback SGD
+# Gradient Compression over SGD and Adam: A Survey
 
-We present here the code of the experimental parts of the paper [Error Feedback Fixes SignSGD and other Gradient Compression Schemes](https://arxiv.org/abs/1901.09847).
+Code for the experimental parts of the course project in CS-439: Optimization for Machine Learning.
 
 The implementation is based on [this repository](https://github.com/kuangliu/pytorch-cifar)'s code and uses PyTorch.
-
-
 
 ## Requirements
 
@@ -32,9 +30,12 @@ To install them automatically: `pip install -r requirements.txt`
 
 A few notations in the code don't match the notations from the paper. In particular,
 
-- What is called signSGD in the paper is the scaled sign SGD in the code, as the gradients are rescaled by their norm.
-- What is called ef-signSGD in the paper is scaled sign SGD with memory in the code. The `memory` parameter can also be used with other compressions besides the sign.
-- TODO:
+- **ssgd**: SGD with sign gradient compression.
+- **sgd_topk**: SGD with top-*k* gradient compression. 
+- **sgd_svdk**: SGD with *k*-PCA gradient compression.
+- **sssgd**: SGD with *scaled* sign gradient compression.
+- **ussgd**: Unscaled SignSGD (MEM-SGD), i.e., SGD with sign gradient compression and error feedback.
+- **ssgdf**: Error-feedback SignSGD, i.e., SGD with *scaled* sign gradient compression and error feedback.
 
 ## Usage
 
@@ -45,13 +46,6 @@ A few notations in the code don't match the notations from the paper. In particu
 - `plot_graph.py` constains the code for plotting the results
 - `print_stats.py` constains the code to list the best performance of each experiment done by tunr_lr.py
 
-# Reference
-If you use this code, please cite the following [paper](http://proceedings.mlr.press/v97/karimireddy19a/karimireddy19a-supp.pdf)
+## Plot
 
-    @inproceedings{karimireddy19a,
-      title = 	 {Error Feedback Fixes {SignSGD} and other Gradient Compression Schemes},
-      author = 	 {Karimireddy, Sai Praneeth and Rebjock, Quentin and Stich, Sebastian U. and Jaggi, Martin},
-      booktitle = 	 {ICML - Proceedings of the 36th International Conference on Machine Learning},
-      pages = 	 {3252--3261},
-      year = 	 {2019}
-    }
+All the figures in the report can be repeated by `run.ipynb`
