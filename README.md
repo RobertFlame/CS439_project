@@ -38,14 +38,10 @@ We clarify the noations here. In particular,
 - **onebit_adam_scaled**: the scaled version of one-bit Adam.
 
 ## Usage
-
+- `run.ipynb` has three parts, consisting of lines for tuning learning rates, running experiments, and plotting figures that are in the report. 
 - `main.py` can be called from the command line to run a single network training and testing. It can take a variety of optional arguments. Type `python main.py --help` for further details.
 - `utils.hyperparameters.py` facilitate the definition of all the hyper-parameters of the experiments.
 - `tune_lr.py` allows to tune the learning rate for a network architecture/data set/optimizer configuration.
 - `main_experiments.py` contains the experiments in the report. 
 - `plot_graph.py` constains the code for plotting the results
 - `print_stats.py` constains the code to list the best performance of each experiment done by tunr_lr.py
-
-## Plot
-
-All the figures in the report can be repeated by `run.ipynb`
