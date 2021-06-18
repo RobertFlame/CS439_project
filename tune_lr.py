@@ -62,8 +62,9 @@ def tune_learning_rate(model, dataset, optimizer, base_name=None, gpu=0):
     start_freeze = hyperparameters['start_freeze']
 
     losses = []
-    lr_space = np.logspace(-5, 1, 9)
+    # lr_space = np.logspace(-5, 1, 9)
     # lr_space = np.logspace(-7, -1, 9)
+    lr_space = [1e-4, 1e-3, 1e-2]
     for index, lr in enumerate(lr_space):
         name = base_name + 'lr' + str(index)
         res = construct_and_train(name=name, dataset=dataset, model=model, resume=False, epochs=num_epochs,
@@ -99,19 +100,20 @@ if __name__ == '__main__':
     tune_learning_rate('vgg', 'cifar10', 'signum')
     tune_learning_rate('resnet', 'cifar100', 'signum')
     """
-    idx = int(input("which one to test? (0-10): "))
+    idx = int(input("which one to test? (0-11): "))
     gpu = int(input("Please input which gpu to use: "))
     
     tune_learning_rate('resnet', 'cifar10', 'sgd', gpu=gpu) if idx == 0 else None
     tune_learning_rate('resnet', 'cifar10', 'sgdm', gpu=gpu) if idx == 1 else None
     tune_learning_rate('resnet', 'cifar10', 'signum', gpu=gpu) if idx == 2 else None
     tune_learning_rate('resnet', 'cifar10', 'sssgd', gpu=gpu) if idx == 3 else None
-    tune_learning_rate('resnet', 'cifar10', 'ssgdf', gpu=gpu)if idx == 4 else None
-    tune_learning_rate('resnet', 'cifar10', 'sgd_svdk', gpu=gpu) if idx == 5 else None
-    tune_learning_rate('resnet', 'cifar10', 'sgd_topk', gpu=gpu) if idx == 6 else None
-    tune_learning_rate('resnet', 'cifar10', 'ssgd', gpu=gpu) if idx == 7 else None
-    tune_learning_rate('resnet', 'cifar10', 'adam', gpu=gpu) if idx == 8 else None
-    tune_learning_rate('resnet', 'cifar10', 'onebit_adam_unscaled', gpu=gpu) if idx == 9 else None
-    tune_learning_rate('resnet', 'cifar10', 'onebit_adam_scaled', gpu=gpu) if idx == 10 else None
+    tune_learning_rate('resnet', 'cifar10', 'sgdf', gpu=gpu) if idx == 4 else None
+    tune_learning_rate('resnet', 'cifar10', 'ssgdf', gpu=gpu)if idx == 5 else None
+    tune_learning_rate('resnet', 'cifar10', 'sgd_svdk', gpu=gpu) if idx == 6 else None
+    tune_learning_rate('resnet', 'cifar10', 'sgd_topk', gpu=gpu) if idx == 7 else None
+    tune_learning_rate('resnet', 'cifar10', 'ssgd', gpu=gpu) if idx == 8 else None
+    tune_learning_rate('resnet', 'cifar10', 'adam', gpu=gpu) if idx == 9 else None
+    tune_learning_rate('resnet', 'cifar10', 'onebit_adam_unscaled', gpu=gpu) if idx == 10 else None
+    tune_learning_rate('resnet', 'cifar10', 'onebit_adam_scaled', gpu=gpu) if idx == 11 else None
 
     # Sign, noscale, no memory, momentum 0.9, weight decay
