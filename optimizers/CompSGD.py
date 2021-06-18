@@ -255,22 +255,7 @@ class CompSGD(Optimizer):
         return np.array(res)
 
     def corrected_gradient_norms_ratio(self):
-        res = []
-        sum_l2_norms = 0
-        sum_normalized_l1_norm = 0
-        for group in self.param_groups:
-            for p in group['params']:
-                param_state = self.state[p]
-                n1 = param_state['corrected_gradient'].norm(p=1)
-                n2 = param_state['corrected_gradient'].norm(p=2)
-                d = param_state['dim']
-                sum_l2_norms += n2*n2
-                sum_normalized_l1_norm += n1*n1/d
-                res.append(n1*n1/n2/n2/d)
-        ''' Correct ratio = (sum of (n1)^2/d)/(sum of (n2)^2).
-            The last coordinate of res has the correct ratio. '''
-        res.append(sum_normalized_l1_norm/sum_l2_norms)
-        return np.array(res)
+        return self.gradient_norms_ratio()
 
     def params_dims(self):
         res = []
