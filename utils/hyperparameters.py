@@ -21,6 +21,10 @@ def get_experiment_hyperparameters(model, dataset, optimizer):
     memory = False
     mback = False
     mnorm = False
+    exp_asq = False
+    adam_or_sgd = 'sgd'
+    start_freeze = 20
+    weight_decay = 5e-4
     k = 0
     if optimizer == 'sgd':
         comp = 'sgd'
@@ -47,6 +51,22 @@ def get_experiment_hyperparameters(model, dataset, optimizer):
     elif optimizer == 'sgd_topk':
         comp = 'topk'
         k = 10
+    elif optimizer == 'adam':
+        adam_or_sgd = 'adam'
+        comp = 'sign'
+        exp_asq = True
+        start_freeze = 1e7
+        weight_decay = 0
+    elif optimizer == 'onebit_adam_unscaled':
+        adam_or_sgd = 'adam'
+        comp = 'sign'
+        exp_asq = True
+        weight_decay = 0
+    elif optimizer == 'onebit_adam_scaled':
+        adam_or_sgd = 'adam'
+        comp = 'scaled_sign'
+        exp_asq = True
+        weight_decay = 0
     else:
         raise ValueError('Invalid value for optimizer : {}'.format(optimizer))
 
@@ -56,7 +76,10 @@ def get_experiment_hyperparameters(model, dataset, optimizer):
     hyperparameters['memory'] = memory
     hyperparameters['mback'] = mback
     hyperparameters['mnorm'] = mnorm
-    hyperparameters['weight_decay'] = 5e-4
+    hyperparameters['weight_decay'] = weight_decay
+    hyperparameters['exp_asq'] = exp_asq
+    hyperparameters['adam_or_sgd'] = adam_or_sgd
+    hyperparameters['start_freeze'] = start_freeze
     hyperparameters['k'] = k
 
     return hyperparameters

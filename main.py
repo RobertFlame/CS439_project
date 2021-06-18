@@ -20,6 +20,7 @@ import argparse
 from models import VGG, ResNet18, PreActResNet18, GoogLeNet, DenseNet121, ResNeXt29_2x64d, MobileNet, MobileNetV2, \
     DPN92, ShuffleNetG2, SENet18, ShuffleNetV2
 from optimizers.ErrorFeedbackSGD import ErrorFeedbackSGD
+from optimizers.OneBitAdam import OneBitAdam
 from optimizers.CompSGD import CompSGD
 from utils.progress_bar import progress_bar
 from utils.pickle import save_obj, load_obj, make_directory, make_file_directory
@@ -128,7 +129,7 @@ def load_checkpoint(net, name):
     return start_epoch, best_acc
 
 
-def create_optimizer(net, comp, memory, noscale, lr=0.1, momentum=0.9, weight_decay=5e-4, k=0):
+def create_optimizer(net, comp, memory, noscale, lr=0.1, momentum=0.9, weight_decay=5e-4, k=0, adam_or_sgd='sgd', start_freeze=20):
     """
     Creates the right optimizer regarding to the parameters and attach it to the net's parameters.
     :param net: The net to optimize.
@@ -140,12 +141,15 @@ def create_optimizer(net, comp, memory, noscale, lr=0.1, momentum=0.9, weight_de
     :param weight_decay: Weight decay of the optimizer.
     :return: A Pytorch optimizer.
     """
-    if memory and not comp:
-        raise ValueError('The memory option is activated without the compression operator')
-    if isinstance(comp, str):
+    if adam_or_sgd == 'adam':
+        print("Adam")
+        optimizer = OneBitAdam(net.parameters(), lr=lr, weight_decay=weight_decay, comp=comp, memory=memory, start_freeze=start_freeze)
+    else:
+        if memory and not comp:
+            raise ValueError('The memory option is activated without the compression operator')
         if comp in ['svdk', 'topk']:
             optimizer = CompSGD(net.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay,
-                                     comp=comp, k=k)
+                                    comp=comp, k=k)
         elif comp in ['scaled_sign', 'sign']:
             optimizer = ErrorFeedbackSGD(net.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay,
                                         comp=comp, memory=memory)
@@ -153,8 +157,6 @@ def create_optimizer(net, comp, memory, noscale, lr=0.1, momentum=0.9, weight_de
             optimizer = optim.SGD(net.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
         else:
             raise ValueError(f"No such comp: {comp}")
-    else:
-        raise ValueError(f"No such comp: {comp}")
     return optimizer
 
 
@@ -185,23 +187,22 @@ def train(net, trainloader, device, optimizer, criterion, memory_back=False):
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
 
-        # TODO: check what it is
-        # if memory_back:
+        if memory_back:
         #     with TemporarilyAddMemory(optimizer):
-        #         outputs = net(inputs)
-        #         loss = criterion(outputs, targets)
-        #         mback_train_loss += loss.item()
-        #         _, predicted = outputs.max(1)
-        #         mback_correct += predicted.eq(targets).sum().item()
+            outputs = net(inputs)
+            loss = criterion(outputs, targets)
+            mback_train_loss += loss.item()
+            _, predicted = outputs.max(1)
+            mback_correct += predicted.eq(targets).sum().item()
 
         optimizer.zero_grad()
         outputs = net(inputs)
         loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()
-        # TODO: check how it works
-        norm_ratio_val += 0
-        corrected_norm_ratio_val += 0
+
+        norm_ratio_val += optimizer.gradient_norms_ratio()
+        corrected_norm_ratio_val += optimizer.corrected_gradient_norms_ratio()
 
         train_loss += loss.item()
         _, predicted = outputs.max(1)
@@ -243,14 +244,13 @@ def test(net, testloader, device, optimizer, criterion, memory_back=False):
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
 
-            # TODO: check what it is
-            # if memory_back:
+            if memory_back:
             #     with TemporarilyAddMemory(optimizer):
-            #         outputs = net(inputs)
-            #         loss = criterion(outputs, targets)
-            #         mback_test_loss += loss.item()
-            #         _, predicted = outputs.max(1)
-            #         mback_correct += predicted.eq(targets).sum().item()
+                outputs = net(inputs)
+                loss = criterion(outputs, targets)
+                mback_test_loss += loss.item()
+                _, predicted = outputs.max(1)
+                mback_correct += predicted.eq(targets).sum().item()
 
             outputs = net(inputs)
             loss = criterion(outputs, targets)
@@ -269,7 +269,6 @@ def test(net, testloader, device, optimizer, criterion, memory_back=False):
     return loss, acc, mback_test_loss / (batch_idx + 1), 100. * mback_correct / total
 
 
-#TODO: to make results consistent within different optimizers
 def write_results(args, res):
     """
     Write recorded training metrics to files.
@@ -291,6 +290,8 @@ def write_results(args, res):
         save_obj(res['memory_back_test_accuracies'], directory + '/memory_back_test_accuracies')
     if args['mnorm']:
         save_obj(res['memory_norms'], directory + '/memory_norms')
+    if args['exp_asq']:
+        save_obj(res['exp_asqs'], directory + '/exp_asqs')
     if args['norm_ratio']:
         save_obj(res['gradient_norm_ratios'], directory + '/gradient_norm_ratios')
         save_obj(res['corrected_norm_ratios'], directory + '/corrected_norm_ratios')
@@ -307,7 +308,9 @@ def write_results(args, res):
 
 def construct_and_train(name, dataset, model, resume, epochs,
                         lr, batch_size, momentum, weight_decay,
-                        comp, k, noscale, memory, mnorm, mback, norm_ratio=False, gpu=0):
+                        comp, k, noscale, memory, mnorm, mback, 
+                        exp_asq, adam_or_sgd='sgd', start_freeze=20, 
+                        norm_ratio=False, gpu=0):
     """
     Constructs a network, trains it, and optionally saves the results.
     :param name: Model name (using for saving)
@@ -325,10 +328,15 @@ def construct_and_train(name, dataset, model, resume, epochs,
     :param mnorm: Whether or not to save the memory norm
     :param mback: Whether or not to save metrics when the memory is added back to the net params
     :param norm_ratio: Whether or not to save norms ratios
+    :param exp_asq: Whether or not to save exp_asq
+    :param adam_or_sgd: 'adam' or 'sgd'
+    :param start_freeze: number of epochs before starting freezing exp_asq
+    :param k: used for topk or svdk
     """
     args = dict(name=name, dataset=dataset, model=model, resume=resume, epochs=epochs,
                 lr=lr, batch_size=batch_size, momentum=momentum, weight_decay=weight_decay,
-                comp=comp, k=k, noscale=noscale, memory=memory, mnorm=mnorm, mback=mback, norm_ratio=norm_ratio)
+                comp=comp, k=k, noscale=noscale, memory=memory, mnorm=mnorm, mback=mback, norm_ratio=norm_ratio,
+                exp_asq=exp_asq, adam_or_sgd=adam_or_sgd, start_freeze=start_freeze)
     # set data loader
     trainloader, testloader, num_classes = load_data(dataset, batch_size)
     # set model and device
@@ -336,8 +344,8 @@ def construct_and_train(name, dataset, model, resume, epochs,
     net = build_model(device, model, num_classes)     
 
     # set optimizer and criterion
-    # TODO: check API for creating optimizers
-    optimizer = create_optimizer(net, comp, memory, noscale, k=k, lr=lr, momentum=momentum, weight_decay=weight_decay)
+    optimizer = create_optimizer(net, comp, memory, noscale, adam_or_sgd=adam_or_sgd, k=k, 
+                                lr=lr, momentum=momentum, weight_decay=weight_decay, start_freeze=start_freeze)
     criterion = nn.CrossEntropyLoss()
 
     # initialize the results
@@ -353,7 +361,8 @@ def construct_and_train(name, dataset, model, resume, epochs,
                memory_back_test_losses=[],
                memory_back_test_accuracies=[],
                gradient_norm_ratios=[],
-               corrected_norm_ratios=[])
+               corrected_norm_ratios=[],
+               exp_asqs=[])
     # resume if possible
     if resume:
         start_epoch, best_acc = load_checkpoint(net, name)
@@ -369,6 +378,8 @@ def construct_and_train(name, dataset, model, resume, epochs,
             res['memory_back_test_accuracies'] = load_obj(path + '/memory_back_test_accuracies')
         if mnorm:
             res['memory_norms'] = load_obj(path + '/memory_norms')
+        if exp_asq:
+            res['exp_asqs'] = load_obj(path + '/exp_asqs')
         if norm_ratio:
             res['gradient_norm_ratios'] = load_obj(path + '/gradient_norm_ratios')
             res['corrected_norm_ratios'] = load_obj(path + '/corrected_norm_ratios')
@@ -376,7 +387,6 @@ def construct_and_train(name, dataset, model, resume, epochs,
     try:
         for epoch in range(start_epoch, start_epoch + epochs):
             print('\nEpoch: %d' % epoch)
-            # TODO: check API for train and test
             train_loss, train_acc, mback_train_loss,\
                 mback_train_acc, norm_ratio_val, corrected_norm_ratio_val = train(net, trainloader, device, optimizer,
                                                                                   criterion, memory_back=mback)
@@ -387,7 +397,6 @@ def construct_and_train(name, dataset, model, resume, epochs,
             res['test_losses'].append(test_loss)
             res['test_accuracies'].append(test_acc)
             
-            # TODO: check consistency within optimizers
             if mback:
                 res['memory_back_train_losses'].append(mback_train_loss)
                 res['memory_back_train_accuracies'].append(mback_train_acc)
@@ -395,6 +404,8 @@ def construct_and_train(name, dataset, model, resume, epochs,
                 res['memory_back_test_accuracies'].append(mback_test_acc)
             if mnorm:
                 res['memory_norms'].append(optimizer.memory_norm())
+            if exp_asq:
+                res['exp_asqs'].append(optimizer.exp_asq())
             if norm_ratio:
                 res['gradient_norm_ratios'].append(norm_ratio_val)
                 res['corrected_norm_ratios'].append(corrected_norm_ratio_val)
@@ -433,7 +444,6 @@ if __name__ == '__main__':
     parser.add_argument('--weight_decay', default=5e-4, type=float, help='SGD weight decay')
 
     # for signSGD with error feedback
-    # parser.add_argument('--comp', action='store_true', help='apply the scaled sign compression operator')
     parser.add_argument('--comp', default=None, type=str, help='different gradient compression schemes')
     parser.add_argument('--k', default=3, type=int, help='value k in top-k or k-svd')
 
@@ -442,7 +452,14 @@ if __name__ == '__main__':
     parser.add_argument('--mnorm', action='store_true', help='computes the norm of the memory at each epoch')
     parser.add_argument('--mback', action='store_true', help='computes the train/test losses/accuracies by adding the'
                                                              'memory back')
+    parser.add_argument('--norm_ratio', action='store_true', help='Whether or not to save norms ratios')
+
+    parser.add_argument('--adam_or_sgd', type=str, help='whether use adam-based optimizer or sgd-based optimizer')
+    parser.add_argument('--start_freeze', type=int, help='number of epochs before starting freezing exp_asq')
+    parser.add_argument('--exp_asq', action='store_true', help='Whether or not to save exp_asq')
+
     args = parser.parse_args()
     construct_and_train(name=args.name, dataset=args.dataset, model=args.model, resume=args.resume, epochs=args.epochs,
                         lr=args.lr, batch_size=args.bs, momentum=args.momentum, weight_decay=args.weight_decay,
-                        comp=args.comp, k=args.k, noscale=args.noscale, memory=args.memory, mnorm=args.mnorm, mback=args.mback, gpu=args.gpu)
+                        comp=args.comp, k=args.k, noscale=args.noscale, memory=args.memory, mnorm=args.mnorm, mback=args.mback, 
+                        exp_asq=args.exp_asq, adam_or_sgd=args.adam_or_sgd, start_freeze=args.start_freeze, gpu=args.gpu)
